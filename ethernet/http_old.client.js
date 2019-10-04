@@ -1,19 +1,40 @@
-const net = require("net");
-const Uplink = require("../uplink.js");
+// https://github.com/websockets/ws/blob/HEAD/doc/ws.md
 
-module.exports = (token, m, iface, device, host) => {
+const argv = require("../argv.js");
+const WebSocket = require("ws");
+const net = require('net');
 
-    console.log("HTTP")
 
-    // create uplink to server
-    const uplink = new Uplink(`${host}/${device._id}/interfaces/${iface._id}`, {
-        "x-token": token
+//TODO add socket error handling (net&ws)
+// - socket end
+// - socket destroyed
+
+module.exports = (token, m, iface) => {
+
+    // connect to webclient interface
+    var ws = new WebSocket(`${argv.url}/interfaces/${iface._id}`, {
+        headers: {
+            "x-token": token
+        }
+    });
+
+
+    ws.on("close", () => {
+
+        console.log("Interface connection closed");
+
+        ws = new WebSocket(`${argv.url}/interfaces/${iface._id}`, {
+            headers: {
+                "x-token": token
+            }
+        });
+
+
     });
 
 
     function connect(stream) {
 
-        let counter = 0;
         const socket = new net.Socket();
         socket.setKeepAlive(true);
 
@@ -22,26 +43,25 @@ module.exports = (token, m, iface, device, host) => {
         stream.pipe(socket, { end: false });
 
 
-        socket.connect(iface.settings.port, iface.settings.host);
+        socket.connect(iface.port, iface.host);
 
 
         socket.on("close", () => {
 
-            console.log("tcp socket closed");
             m.report("disconnected", iface);
 
+            console.log("tcp socket closed");
             socket.destroy();
-            setTimeout(connect, counter * 1000);
+            setTimeout(connect, 500);
 
         });
 
         socket.on("connect", () => {
 
-            counter = 0;
             m.report("connected", iface);
 
             console.log("tcp socket connect")
-            console.log(`Connected to target http://${iface.settings.host}:${iface.settings.port}`);
+            console.log(`Connected to target http://${iface.host}:${iface.port}`);
 
         });
 
@@ -76,25 +96,22 @@ module.exports = (token, m, iface, device, host) => {
 
     }
 
+    ws.on("open", () => {
 
-    ////////////////////////////77
+        console.log("Interface connection open")
+
+        const stream = WebSocket.createWebSocketStream(ws, {
+            allowHalfOpen: true
+        });
+
+
+        connect(stream);
 
 
 
-    uplink.on("connected", function () {
-        connect(this.stream);
-        console.log("Connected to server");
     });
 
-    uplink.on("disconnected", () => {
-        console.log("Disconnected from server");
-    });
 
-    /*
-    uplink.on("data", (data) => {
-        console.log("DATA>", data);
-    });*/
 
-    //uplink.send("data...");
 
 };

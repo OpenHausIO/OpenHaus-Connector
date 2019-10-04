@@ -22,7 +22,7 @@ module.exports = (argv, list) => {
             worker.on("message", (data) => {
                 if (data.running) {
 
-                    console.log("Send to worker %d:", i, list[i])
+                    //console.log("Send to worker %d:", i, list[i])
 
                     worker.send({
                         device: list[i]
@@ -48,7 +48,7 @@ module.exports = (argv, list) => {
 
     } else {
 
-        console.log(`Worker ${process.pid} started`);
+        //console.log(`Worker ${process.pid} started`);
         process.send({ running: true });
 
 
@@ -57,20 +57,24 @@ module.exports = (argv, list) => {
 
 
                 // device received from cluster master
-                console.log("Handlerstuff for device", data.device);
+                //console.log("Handlerstuff for device", data.device);
 
 
-                const m = new managmenet();
+                const m = new management();
                 m.connect(`${argv.host}/${data.device._id}/connector`);
 
 
-                data.device.interfaces.forEach(iface => {
-                    if (iface.type === "ETHERNET") {
+                data.device.interfaces.filter((e) => {
+                    return e.type == "ETHERNET";
+                }).forEach(iface => {
+                    if (iface.type === "ETHERNET" && iface.settings.protocol == "http") {
                         try {
 
+
+
                             // require procotol connector
-                            const handler = require(`./ethernet/${iface.protocol}.client.js`);
-                            handler(null, m, iface); // TODO TOKEN GENERATION!
+                            const handler = require(`./ethernet/${iface.settings.protocol}.client.js`);
+                            handler(null, m, iface, data.device, argv.host); // TODO TOKEN GENERATION!
 
                         } catch (e) {
 
@@ -81,6 +85,7 @@ module.exports = (argv, list) => {
 
                         // hardware
                         // RS232, IR, KNX
+                        console.log(iface)
 
                     }
                 });

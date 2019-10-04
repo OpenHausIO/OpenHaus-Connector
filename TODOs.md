@@ -5,6 +5,7 @@
       3) --url = full path to interface?
    2) Documentation
    3) more examples
+   4) management.js -> uplink.js nutzen
 
 ### 2) device.bootstrap.js
    1) worker respawn after exit
