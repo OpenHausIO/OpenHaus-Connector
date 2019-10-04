@@ -1,7 +1,6 @@
 // https://github.com/websockets/ws/blob/HEAD/doc/ws.md
 
 const argv = require("../argv.js");
-const debug = require("debug")("OpenHaus:Connector.http.client");
 const WebSocket = require("ws");
 const net = require('net');
 
@@ -49,6 +48,8 @@ module.exports = (token, m, iface) => {
 
         socket.on("close", () => {
 
+            m.report("disconnected", iface);
+
             console.log("tcp socket closed");
             socket.destroy();
             setTimeout(connect, 500);
@@ -56,6 +57,8 @@ module.exports = (token, m, iface) => {
         });
 
         socket.on("connect", () => {
+
+            m.report("connected", iface);
 
             console.log("tcp socket connect")
             console.log(`Connected to target http://${iface.host}:${iface.port}`);

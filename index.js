@@ -1,49 +1,33 @@
-console.log("Starting OpenHaus:Connector...");
-
-
 if (process.env.NODE_ENV !== "production") {
-    require("clear")();
-    require("dotenv").config();
+    require("dotenv")();
 }
 
-const debug = require("debug");
+if (!module.parent) {
 
+    const minimist = require("minimist");
+    const pkg = require("./package.json");
 
-// validate cli args
-const argv = require("./argv.js");
-debug("index.js > argv", argv);
-
-// connect to management channel
-const m = require("./management-channel.js");
-
-
-
-
-m.on(":settings", (data) => {
-    // device config settings
-});
-
-
-m.on(":interfaces", (data) => {
-
-    // interface settings
-    debug("interfaces data", data);
-
-
-    data.forEach(iface => {
-        if (iface.type == "ETHERNET") {
-
-            debug("Start %s.client handler", iface.protocoll);
-
-            // require protocoll handler for interface
-            require(`./ethernet/${iface.protocoll}.client.js`)("token", m, iface);
-
-        } else {
-
-            debug("Handler %s not implementet yet!", iface.type);
-            //require(`./hardware/${iface.protocoll}.js`)("token", m, iface);
-
+    const argv = minimist(process.argv.slice(2), {
+        string: ["host"],
+        boolean: ["version"],
+        alias: {
+            v: "version"
         }
     });
 
-});
+    if (argv.version) {
+        console.log("Version: %s", pkg.version);
+        return process.exit(0);
+    }
+
+    // get device infos from server
+    require("./rest-client.js")(argv, (list) => {
+        require("./device.bootstrap.js")(argv, list);
+    });
+
+} else {
+
+    // export management lib
+    module.exports = require("./device.management.js");
+
+}

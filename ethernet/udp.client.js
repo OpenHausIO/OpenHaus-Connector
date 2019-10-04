@@ -1,11 +1,6 @@
-// https://www.hacksparrow.com/nodejs/udp-server-and-client-example.html
-
-const argv = require("./argv.js");
 const dgram = require("dgram");
-const debug = require("debug")("OpenHaus:Connector.udp.client");
-const Webclient = require("ws");
 
-
+// https://www.hacksparrow.com/nodejs/udp-server-and-client-example.html
 
 module.exports = (token, m, iface) => {
 
@@ -22,14 +17,14 @@ module.exports = (token, m, iface) => {
 
     ws.on("open", () => {
 
-        debug("[ws] connected to %s", ws.url);
+        console.log("[ws] connected to %s", ws.url);
 
     });
 
 
     ws.on("error", (error) => {
 
-        debug("[ws] Error", error);
+        console.log("[ws] Error", error);
 
         m.emit(":interface.error", {
             iface,
@@ -41,7 +36,7 @@ module.exports = (token, m, iface) => {
 
     ws.on("message", (data) => {
 
-        debug("[ws] > [udp]", data);
+        console.log("[ws] > [udp]", data);
 
         const buff = Buffer.from(data);
         client.send(buff, 0, buff.length, iface.port, iface.host);
@@ -50,19 +45,16 @@ module.exports = (token, m, iface) => {
 
 
     client.on("message", (data) => {
-        debug("[udp] > [ws]", data);
+        console.log("[udp] > [ws]", data);
         ws.send(data);
     });
 
 
     client.on("error", (error) => {
 
-        debug("[udp] Error", error);
+        console.log("[udp] Error", error);
 
-        m.emit(":interface.error", {
-            iface,
-            error
-        });
+        m.report("error", iface, error);
 
     });
 
