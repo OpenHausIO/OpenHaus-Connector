@@ -1,21 +1,20 @@
 {
-  "name": "connector",
+  "name": "OpenHaus-Connector",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "minimist": "^1.2.0",
     "ws": "^7.1.2"
   },
   "devDependencies": {
-    "clear": "^0.1.0",
-    "debug": "^4.1.1",
-    "dotenv": "^8.1.0",
-    "nodemon": "^1.19.2"
+    "dotenv": "^8.2.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "optionalDependencies": {
+    "minimist": "^1.2.0"
+  }
 }

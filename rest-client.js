@@ -2,7 +2,11 @@ const url = require("url");
 
 module.exports = (argv, cb) => {
 
-    const parsed = new url.URL(argv.host);
+    const HOST = (argv.host || process.env.HOST || "localhost");
+    const TOKEN = (argv.token || process.env.TOKEN || null);
+
+
+    const parsed = new url.URL(HOST);
     const protocol = parsed.protocol.slice(0, -1);
 
     if (["http", "https"].indexOf(protocol) === -1) {
@@ -10,8 +14,9 @@ module.exports = (argv, cb) => {
     }
 
     // create http request
-    const request = require(protocol).request(argv.host, {
+    const request = require(protocol).request(`${HOST}/api/devices`, {
         headers: {
+            "x-token": TOKEN,
             "Content-Type": "application/json"
         }
     });
@@ -20,6 +25,7 @@ module.exports = (argv, cb) => {
     request.on("response", (res) => {
 
         if (res.statusCode !== 200) {
+            console.log(res.statusCode)
             throw new Error("INVALID_HTTP_STATUS");
         }
 

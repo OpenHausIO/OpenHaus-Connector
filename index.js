@@ -1,5 +1,5 @@
 if (process.env.NODE_ENV !== "production") {
-    //require("dotenv")();
+    require("dotenv").config();
 }
 
 if (!module.parent) {
@@ -22,12 +22,7 @@ if (!module.parent) {
 
     // get device infos from server
     require("./rest-client.js")(argv, (list) => {
-        require("./device.bootstrap.js")(argv, list);
+        require("./worker.js")(list);
     });
-
-} else {
-
-    // export management lib
-    module.exports = require("./device.management.js");
 
 }
