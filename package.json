@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "dateformat": "^3.0.3",
     "ws": "^7.1.2"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "optionalDependencies": {
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "winston": "^3.2.1"
   }
 }

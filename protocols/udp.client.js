@@ -75,13 +75,13 @@ module.exports = (log, m) => {
             }
 
 
-            uplink.on("disconnect", () => {
+            uplink.on("disconnected", () => {
                 log.info("Interface Uplink disconnected");
                 disconnect();
             });
 
 
-            uplink.on("connect", (ws, stream) => {
+            uplink.on("connected", (ws, stream) => {
 
                 log.info("Interface Uplink connected");
                 log.debug("Connect to device intreface");

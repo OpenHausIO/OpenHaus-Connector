@@ -8,10 +8,9 @@ module.exports = (log, m) => {
             // global vars
             var socket = null;
             var closing = false;
+            var interval = null;
 
             const { host, port } = iface.settings;
-
-
 
             const connect = function () {
 
@@ -31,16 +30,12 @@ module.exports = (log, m) => {
 
                 socket.once("close", () => {
 
-                    socket = null;
-
                     log.info("Disconnected from device interface");
                     m.report(":iface.disconnected", iface);
 
                     if (!closing) {
 
-                        closing = false;
-
-                        setInterval(function () {
+                        interval = setInterval(function () {
                             if (socket) {
 
                                 log.debug("Clear reconnect interval");
@@ -52,7 +47,10 @@ module.exports = (log, m) => {
                                 connect(host, port);
 
                             }
-                        }, 5000);
+                        }, 10000);
+
+                        closing = false;
+                        socket = null;
 
                     }
 
@@ -63,23 +61,29 @@ module.exports = (log, m) => {
 
             const disconnect = function () {
 
+                log.debug("Disconnect fron tcp://%s:%d", host, port);
+
                 closing = true;
 
                 if (socket) {
-                    socket.destory();
+                    socket.destroy();
                     socket = null;
                 }
 
             }
 
 
-            uplink.on("disconnect", () => {
+            uplink.on("disconnected", () => {
                 log.info("Interface Uplink disconnected");
                 disconnect();
+                process.nextTick(() => {
+                    clearInterval(interval);
+                });
+
             });
 
 
-            uplink.on("connect", (ws, stream) => {
+            uplink.on("connected", (ws, stream) => {
 
                 log.info("Interface Uplink connected");
 

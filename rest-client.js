@@ -42,6 +42,11 @@ module.exports = (argv, cb) => {
     });
 
 
+    request.on("error", (e) => {
+        console.log("Request error", e);
+    });
+
+
     // no data to send
     request.end();
 
