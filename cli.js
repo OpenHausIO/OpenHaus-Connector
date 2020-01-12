@@ -109,3 +109,11 @@ getDeviceList((err, list) => {
     });
 
 });
+
+/*
+connector.bridge("http://127.0.0.1/api/interfaces/asdfasdfasdf", {
+    protocol: "tcp",
+    host: "192.168.2.10",
+    port: 65300
+});
+*/

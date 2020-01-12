@@ -1,6 +1,10 @@
-const ifaceStream = require("interface-stream");
+const interfaceStream = require("interface-stream");
 const WebSocket = require("ws");
 
+/**
+ * Connector
+ * @constructor
+ */
 function Connector() {
 
     this.protocols = {};
@@ -18,7 +22,8 @@ function Connector() {
         debug: noop,
         info: noop,
         warn: noop,
-        error: noop
+        error: noop,
+        fatal: noop
     };
 
 
@@ -32,6 +37,11 @@ function Connector() {
 };
 
 
+/**
+ * Register a handler function for protocol
+ * @param {string} name
+ * @param {function} hanlder
+ */
 Connector.prototype.register = function (name, handler) {
 
     const logger = this.logger;
@@ -43,6 +53,12 @@ Connector.prototype.register = function (name, handler) {
 
 };
 
+
+/**
+ * Create a bridge url to iface settings
+ * @param {string} url WebSocket Endpoint on server
+ * @param {object} iface Interface Object from server
+ */
 Connector.prototype.bridge = function (url, iface) {
     if (iface.protocol in this.protocols) {
 
