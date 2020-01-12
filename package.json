@@ -1,22 +1,16 @@
 {
-  "name": "OpenHaus-Connector",
+  "name": "connector",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "dateformat": "^3.0.3",
-    "ws": "^7.1.2"
-  },
-  "devDependencies": {
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "interface-stream": "git+https://github.com/OpenHausIO/interface-stream.git",
+    "ws": "^7.2.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "optionalDependencies": {
-    "minimist": "^1.2.0",
-    "winston": "^3.2.1"
-  }
+  "license": "GPLv2"
 }

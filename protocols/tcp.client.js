@@ -1,7 +1,7 @@
 const net = require("net");
 
-module.exports = (log, m) => {
-    return (uplink, iface, device) => {
+module.exports = (log) => {
+    return (uplink, iface) => {
         try {
 
 
@@ -23,15 +23,18 @@ module.exports = (log, m) => {
                 socket = new net.Socket();
                 socket.connect(port, host);
 
+                uplink.pipe(socket);
+                socket.pipe(uplink);
+
+
                 socket.once("connect", () => {
                     log.info("Connected to device interface");
-                    m.report(":iface.connected", iface);
                 });
+
 
                 socket.once("close", () => {
 
                     log.info("Disconnected from device interface");
-                    m.report(":iface.disconnected", iface);
 
                     if (!closing) {
 
@@ -70,29 +73,17 @@ module.exports = (log, m) => {
                     socket = null;
                 }
 
+                clearInterval(interval);
+
             }
 
 
-            uplink.on("disconnected", () => {
-                log.info("Interface Uplink disconnected");
-                disconnect();
-                process.nextTick(() => {
-                    clearInterval(interval);
-                });
-
+            uplink.on("attached", () => {
+                connect();
             });
 
-
-            uplink.on("connected", (ws, stream) => {
-
-                log.info("Interface Uplink connected");
-
-                log.debug("Init device interface connect");
-                connect();
-
-                stream.pipe(socket);
-                socket.pipe(stream);
-
+            uplink.on("detached", () => {
+                disconnect();
             });
 
 

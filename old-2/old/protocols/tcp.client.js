@@ -1,7 +1,7 @@
-const webSocket = require("ws");
+const net = require("net");
 
-module.exports = (log) => {
-    return (uplink, iface) => {
+module.exports = (log, m) => {
+    return (uplink, iface, device) => {
         try {
 
 
@@ -20,25 +20,18 @@ module.exports = (log) => {
 
                 log.debug("Connect to tcp://%s:%d", host, port)
 
-                socket = new WebSocket();
-
-                const stream = WebSocket.createWebSocketStream(socket, {
-                    end: false
-                });
-
-
-                uplink.pipe(stream);
-                stream.pipe(uplink);
-
+                socket = new net.Socket();
+                socket.connect(port, host);
 
                 socket.once("connect", () => {
                     log.info("Connected to device interface");
+                    m.report(":iface.connected", iface);
                 });
-
 
                 socket.once("close", () => {
 
                     log.info("Disconnected from device interface");
+                    m.report(":iface.disconnected", iface);
 
                     if (!closing) {
 
@@ -77,17 +70,29 @@ module.exports = (log) => {
                     socket = null;
                 }
 
-                clearInterval(interval);
-
             }
 
 
-            uplink.on("attached", () => {
-                connect();
+            uplink.on("disconnected", () => {
+                log.info("Interface Uplink disconnected");
+                disconnect();
+                process.nextTick(() => {
+                    clearInterval(interval);
+                });
+
             });
 
-            uplink.on("detached", () => {
-                disconnect();
+
+            uplink.on("connected", (ws, stream) => {
+
+                log.info("Interface Uplink connected");
+
+                log.debug("Init device interface connect");
+                connect();
+
+                stream.pipe(socket);
+                socket.pipe(stream);
+
             });
 
 
