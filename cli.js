@@ -37,7 +37,7 @@ function request(uri, cb) {
     request.on("response", (res) => {
 
         const statusCode = res.statusCode;
-        const location = response.headers.location;
+        const location = res.headers.location;
 
         if (location && statusCode >= 300 && statusCode < 400) {
             return request(loction, (err, data) => {
@@ -86,6 +86,8 @@ function request(uri, cb) {
 function getDeviceList(cb) {
     request(`${HOST}/api/devices`, (err, body) => {
 
+        //console.log(body)
+
         if (err) {
             return cb(err);
         }
@@ -104,9 +106,20 @@ getDeviceList((err, list) => {
         return;
     }
 
-    list.interfaces.forEach((iface) => {
-        connector.bridge(`${HOST}/api/interfaces/${iface._id}`, iface);
+    list.forEach((device) => {
+        if (device.enabled) {
+
+            // bridge device interface protocol 
+            // to websocket uplink
+            device.interfaces.forEach((iface) => {
+                connector.bridge(`${HOST}/api/devices/${device._id}/interfaces/${iface._id}`, iface);
+            });
+
+        } else {
+            console.log("Device '%s' is disabled, ignore.", device.name)
+        }
     });
+
 
 });
 

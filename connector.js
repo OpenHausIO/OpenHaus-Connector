@@ -13,9 +13,8 @@ function Connector() {
         reconnectDelay: 5000
     });
 
-    function noop() {
-        return console.log;
-    }
+    const noop = console.log;
+
 
     this.logger = {
         verbose: noop,
@@ -29,7 +28,7 @@ function Connector() {
 
     // register protocol handler
     this.register("tcp", require("./protocols/tcp.client.js"));
-    //this.register("udp", require("./protocols/tcp.client.js"));
+    this.register("udp", require("./protocols/udp.client.js"));
     this.register("http", require("./protocols/tcp.client.js"));
     this.register("https", require("./protocols/tcp.client.js"));
     this.register("ws", require("./protocols/tcp.client.js"));
@@ -60,10 +59,10 @@ Connector.prototype.register = function (name, handler) {
  * @param {object} iface Interface Object from server
  */
 Connector.prototype.bridge = function (url, iface) {
-    if (iface.protocol in this.protocols) {
+    if (iface.settings.protocol in this.protocols) {
 
         // get handler function
-        const handler = this.protocols[iface.protocol];
+        const handler = this.protocols[iface.settings.protocol];
 
         // create interface uplink
         const uplink = new interfaceStream({
@@ -71,7 +70,7 @@ Connector.prototype.bridge = function (url, iface) {
         });
 
         // websocket re-connect wrapper
-        const connect = function connect() {
+        const connect = () => {
 
             // connect to websocket server
             const ws = new WebSocket(url, {
@@ -79,17 +78,21 @@ Connector.prototype.bridge = function (url, iface) {
             });
 
             ws.once("open", () => {
-                uplink.attach(ws);
+                // console.log("Connected to interface %s", url);
+                process.nextTick(() => {
+                    uplink.attach(ws);
+                });
+
             });
 
             ws.once("close", () => {
-                //event.emit...
                 uplink.detach();
                 setTimeout(connect, this.options.reconnectDelay);
             });
 
             ws.once("error", (err) => {
                 //event.emit("error", err, iface);
+                this.log.error(err, "WebSocket Uplink error: %s", err.message);
                 setTimeout(connect, this.options.reconnectDelay);
             });
 
@@ -99,11 +102,14 @@ Connector.prototype.bridge = function (url, iface) {
         handler(uplink, iface);
 
         // connect to websocket
-        connect();
+        process.nextTick(() => {
+            connect();
+        });
 
     } else {
-
-        throw new Error("PROTOCOL_NOT_REGISTERD");
+        const error = new Error("PROTOCOL_NOT_REGISTERD");
+        error.message = "Protocol xxx no handler registerd";
+        throw error;
 
     }
 };

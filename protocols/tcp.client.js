@@ -4,7 +4,6 @@ module.exports = (log) => {
     return (uplink, iface) => {
         try {
 
-
             // global vars
             var socket = null;
             var closing = false;
@@ -14,7 +13,7 @@ module.exports = (log) => {
 
             const connect = function () {
 
-                if (socket) {
+                if (socket || interval) {
                     return;
                 }
 
@@ -23,18 +22,22 @@ module.exports = (log) => {
                 socket = new net.Socket();
                 socket.connect(port, host);
 
-                uplink.pipe(socket);
-                socket.pipe(uplink);
-
 
                 socket.once("connect", () => {
-                    log.info("Connected to device interface");
+
+                    log.info("Connected to device interface (%s:%d)", host, port);
+
+                    // pipe only after connect
+                    // prevent event emitter leak
+                    uplink.pipe(socket);
+                    socket.pipe(uplink);
+
                 });
 
 
                 socket.once("close", () => {
 
-                    log.info("Disconnected from device interface");
+                    log.info("Disconnected from device interface tcp://%s:%d", host, port);
 
                     if (!closing) {
 
@@ -42,12 +45,12 @@ module.exports = (log) => {
                             if (socket) {
 
                                 log.debug("Clear reconnect interval");
-                                clearInterval(this);
+                                clearInterval(interval);
 
                             } else {
 
                                 log.debug("Try reconnect");
-                                connect(host, port);
+                                connect();
 
                             }
                         }, 10000);
@@ -57,6 +60,10 @@ module.exports = (log) => {
 
                     }
 
+                });
+
+                socket.once("error", (err) => {
+                    log.error(err, "Connection error (%s:%d)", host, port);
                 });
 
             };
@@ -78,11 +85,11 @@ module.exports = (log) => {
             }
 
 
-            uplink.on("attached", () => {
+            uplink.on("websocket.attached", () => {
                 connect();
             });
 
-            uplink.on("detached", () => {
+            uplink.on("websocket.detached", () => {
                 disconnect();
             });
 
